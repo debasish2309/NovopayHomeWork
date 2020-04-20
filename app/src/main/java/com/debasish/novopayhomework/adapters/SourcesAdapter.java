@@ -15,8 +15,15 @@ import com.debasish.novopayhomework.WebviewActivity;
 import com.debasish.novopayhomework.model.ServerResponseSources;
 import com.debasish.novopayhomework.databinding.SingleLayoutBinding;
 import com.debasish.novopayhomework.model.Source;
+import com.jakewharton.rxbinding3.view.RxView;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import kotlin.Unit;
 
 public class SourcesAdapter extends RecyclerView.Adapter<SourcesAdapter.MyViewHolder> {
 
@@ -38,13 +45,34 @@ public class SourcesAdapter extends RecyclerView.Adapter<SourcesAdapter.MyViewHo
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, final int position) {
         holder.binding.tvTitle.setText(sources.get(position).getDescription());
-        holder.binding.llNewlayout.setOnClickListener(view -> {
-            Intent intent = new Intent(context, WebviewActivity.class);
-            intent.putExtra("WEBVIEW",sources.get(position).getUrl());
-            context.startActivity(intent);
 
+        //Throttlefirst to handle multiple clicks
+        RxView.clicks(holder.binding.llNewlayout)
+                .throttleFirst(500, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Unit>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
 
-        });
+                    }
+
+                    @Override
+                    public void onNext(Unit unit) {
+                        Intent intent = new Intent(context, WebviewActivity.class);
+                        intent.putExtra("WEBVIEW",sources.get(position).getUrl());
+                        context.startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
 
     }
 

@@ -18,8 +18,15 @@ import com.debasish.novopayhomework.WebviewActivity;
 import com.debasish.novopayhomework.databinding.SingleLayoutBinding;
 import com.debasish.novopayhomework.model.ServerResponseTopHeadlines;
 import com.debasish.novopayhomework.model.TopHeadLineArticle;
+import com.jakewharton.rxbinding3.view.RxView;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import kotlin.Unit;
 
 public class TopHeadlinesAdapter extends RecyclerView.Adapter<TopHeadlinesAdapter.MyViewHolder> {
 
@@ -53,13 +60,33 @@ public class TopHeadlinesAdapter extends RecyclerView.Adapter<TopHeadlinesAdapte
         holder.binding.tvDate.setText(articleList.get(position).getPublishedAt());
         holder.binding.tvTitle.setText(articleList.get(position).getTitle());
 
-        holder.binding.llNewlayout.setOnClickListener(view -> {
-            Intent intent = new Intent(context, WebviewActivity.class);
-            intent.putExtra("WEBVIEW",articleList.get(position).getUrl());
-            context.startActivity(intent);
+        //Throttlefirst to handle multiple clicks
+        RxView.clicks(holder.binding.llNewlayout)
+                .throttleFirst(500, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Unit>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
 
+                    }
 
-        });
+                    @Override
+                    public void onNext(Unit unit) {
+                        Intent intent = new Intent(context, WebviewActivity.class);
+                        intent.putExtra("WEBVIEW",articleList.get(position).getUrl());
+                        context.startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
 
 
     }

@@ -59,11 +59,33 @@ public class EverythingAdapter extends RecyclerView.Adapter<EverythingAdapter.My
         holder.binding.tvDate.setText(articleList.get(position).getPublishedAt());
         holder.binding.tvTitle.setText(articleList.get(position).getTitle());
 
-        holder.binding.llNewlayout.setOnClickListener(view -> {
-            Intent intent = new Intent(context, WebviewActivity.class);
-            intent.putExtra("WEBVIEW",articleList.get(position).getUrl());
-            context.startActivity(intent);
-        });
+        //Throttlefirst to handle multiple clicks
+        RxView.clicks(holder.binding.llNewlayout)
+                .throttleFirst(500,TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Unit>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Unit unit) {
+                        Intent intent = new Intent(context, WebviewActivity.class);
+                        intent.putExtra("WEBVIEW",articleList.get(position).getUrl());
+                        context.startActivity(intent);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
 
     }
 
